@@ -1,0 +1,11 @@
+{
+  "name": "lets-cookies",
+  "private": true,
+  "description": "Testes do plugin Lets Cookies",
+  "scripts": {
+    "test": "php tests/php-tests.php && node tests/js-tests.js"
+  },
+  "devDependencies": {
+    "jsdom": "^24.0.0"
+  }
+}
