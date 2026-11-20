@@ -2,7 +2,7 @@
 
 Plugin WordPress de banner de cookies e registro de consentimento (LGPD) da Lets Marketing.
 
-**Status:** protótipo `0.1.0`, para testes em homologação. Não usar em produção antes do piloto e da revisão jurídica.
+**Status:** protótipo `0.1.1`, para testes em homologação. Não usar em produção antes do piloto e da revisão jurídica.
 
 ## Princípios
 

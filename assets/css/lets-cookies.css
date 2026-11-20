@@ -224,6 +224,9 @@ html.lets-ck-open { overflow: hidden; }
 }
 
 .lets-ck-browser { font-size: 13px; opacity: 0.85; }
+.lets-ck-browser p { margin: 0 0 6px; }
+.lets-ck-browser-links { margin: 0 0 12px; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.lets-ck-browser-links a { color: var(--lets-ck-primary, #55693c); text-decoration: underline; }
 
 /* ---------- Botão flutuante ---------- */
 

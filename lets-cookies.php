@@ -3,7 +3,7 @@
  * Plugin Name:       Lets Cookies
  * Plugin URI:        https://letsite.com.br/
  * Description:       Banner de cookies e registro de consentimento (LGPD) da Lets. Roda inteiro no próprio site: nenhuma requisição externa antes do consentimento e registro guardado no banco do WordPress.
- * Version:           0.1.0
+ * Version:           0.1.1
  * Requires at least: 5.9
  * Requires PHP:      7.4
  * Author:            Lets Marketing
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'LETS_COOKIES_VERSION', '0.1.0' );
+define( 'LETS_COOKIES_VERSION', '0.1.1' );
 define( 'LETS_COOKIES_FILE', __FILE__ );
 define( 'LETS_COOKIES_DIR', plugin_dir_path( __FILE__ ) );
 define( 'LETS_COOKIES_URL', plugin_dir_url( __FILE__ ) );

@@ -165,12 +165,21 @@
 
 	/* ---------- Registro ---------- */
 
+	/*
+	 * O registro comprova o consentimento (Guia ANPD, pág. 19). Até o servidor
+	 * confirmar, a escolha fica marcada como pendente (l: 0) e é reenviada na
+	 * próxima página, para nenhuma escolha ficar sem registro por falha de rede.
+	 */
 	function log(action) {
 		if (!cfg.restUrl || !window.fetch) {
 			return;
 		}
 		var choices = {};
 		CATS.forEach(function (c) { choices[c] = granted(c); });
+		state.a = action;
+		state.l = 0;
+		writeState(state);
+		var current = state;
 		try {
 			window.fetch(cfg.restUrl, {
 				method: 'POST',
@@ -184,6 +193,16 @@
 					choices: choices,
 					page: window.location.pathname
 				})
+			}).then(function (res) {
+				// 2xx: registrado. 400: corpo recusado, não adianta reenviar.
+				// 429 ou erro de servidor: fica pendente para a próxima página.
+				if (current !== state) {
+					return;
+				}
+				if (res && (res.ok || res.status === 400)) {
+					state.l = 1;
+					writeState(state);
+				}
 			}).catch(function () {});
 		} catch (e) { /* o registro nunca bloqueia a navegação */ }
 	}
@@ -261,13 +280,33 @@
 		if (cfg.policyUrl) {
 			p.appendChild(el('a', { href: cfg.policyUrl }, T.policy_link));
 		}
-		if (cfg.rightsUrl) {
+		// Link para exercer direitos já no 1º nível (Guia ANPD, pág. 31).
+		// Sem canal próprio configurado, aponta para a Política.
+		var rights = cfg.rightsUrl || cfg.policyUrl;
+		if (rights) {
 			if (p.childNodes.length) {
 				p.appendChild(document.createTextNode(' · '));
 			}
-			p.appendChild(el('a', { href: cfg.rightsUrl }, 'Seus direitos'));
+			p.appendChild(el('a', { href: rights }, T.rights_link));
 		}
 		return p;
+	}
+
+	// Como bloquear pelo navegador (Guia ANPD, pág. 32).
+	function browserHelp() {
+		var wrap = el('div', { className: 'lets-ck-browser' });
+		wrap.appendChild(el('p', {}, T.browser_info));
+		var list = (cfg.browserLinks || []).filter(function (b) { return /^https:\/\//.test(b.url); });
+		if (list.length) {
+			var ul = el('ul', { className: 'lets-ck-browser-links' });
+			list.forEach(function (b) {
+				var li = el('li');
+				li.appendChild(el('a', { href: b.url, target: '_blank', rel: 'noopener noreferrer' }, b.name));
+				ul.appendChild(li);
+			});
+			wrap.appendChild(ul);
+		}
+		return wrap;
 	}
 
 	function showBanner() {
@@ -331,7 +370,7 @@
 			dialog.appendChild(box);
 		});
 
-		dialog.appendChild(el('p', { className: 'lets-ck-browser' }, T.browser_info));
+		dialog.appendChild(browserHelp());
 		dialog.appendChild(links());
 		dialog.appendChild(buttons(null));
 		overlay.appendChild(dialog);
@@ -448,6 +487,9 @@
 
 	function start() {
 		state = readState();
+		if (state && state.l === 0) {
+			log(state.a || 'custom'); // Registro que não chegou ao servidor.
+		}
 		if (state) {
 			updateConsentMode();
 			activateScripts();

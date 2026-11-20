@@ -17,6 +17,24 @@ class Lets_Cookies_Admin {
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		add_action( 'admin_init', array( __CLASS__, 'register' ) );
 		add_filter( 'plugin_action_links_' . plugin_basename( LETS_COOKIES_FILE ), array( __CLASS__, 'action_links' ) );
+		add_action( 'admin_notices', array( __CLASS__, 'notices' ) );
+	}
+
+	/**
+	 * Avisa quando falta o que o Guia da ANPD pede no banner: link para a
+	 * Política e para o exercício de direitos (pág. 31).
+	 */
+	public static function notices() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			return;
+		}
+		$s = Lets_Cookies_Settings::get();
+		if ( '' === $s['policy_url'] ) {
+			printf(
+				'<div class="notice notice-warning"><p><strong>Lets Cookies:</strong> preencha o link da Política de Cookies em <a href="%s">Configurações &gt; Lets Cookies</a>. Sem ele, o banner fica sem o link para a política e para o exercício de direitos.</p></div>',
+				esc_url( admin_url( 'options-general.php?page=' . self::PAGE ) )
+			);
+		}
 	}
 
 	public static function menu() {
@@ -134,6 +152,7 @@ class Lets_Cookies_Admin {
 						'title'          => 'Título do banner',
 						'message'        => 'Mensagem do banner',
 						'policy_link'    => 'Texto do link da política',
+						'rights_link'    => 'Texto do link de direitos',
 						'accept_all'     => 'Botão aceitar',
 						'reject_all'     => 'Botão rejeitar',
 						'customize'      => 'Botão personalizar',

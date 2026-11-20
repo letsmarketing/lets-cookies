@@ -129,6 +129,25 @@ gtag('consent', 'default', {ad_storage:'denied', ad_user_data:'denied', ad_perso
 			'restUrl'      => esc_url_raw( rest_url( 'lets-cookies/v1/consent' ) ),
 			'position'     => $settings['position'],
 			'showFloating' => (bool) $settings['show_floating'],
+			'browserLinks' => self::browser_links(),
+		);
+	}
+
+	/**
+	 * Páginas oficiais de ajuda para bloquear cookies no navegador
+	 * (Guia ANPD, pág. 32). Conferir os endereços a cada versão.
+	 *
+	 * @return array
+	 */
+	public static function browser_links() {
+		return apply_filters(
+			'lets_cookies_browser_links',
+			array(
+				array( 'name' => 'Google Chrome', 'url' => 'https://support.google.com/chrome/answer/95647?hl=pt-BR' ),
+				array( 'name' => 'Mozilla Firefox', 'url' => 'https://support.mozilla.org/kb/clear-cookies-and-site-data-firefox' ),
+				array( 'name' => 'Safari (Mac)', 'url' => 'https://support.apple.com/pt-br/guide/safari/gerenciar-cookies-sfri11471/mac' ),
+				array( 'name' => 'Microsoft Edge', 'url' => 'https://support.microsoft.com/pt-br/edge/temporarily-allow-cookies-and-site-data-in-microsoft-edge' ),
+			)
 		);
 	}
 }

@@ -11,11 +11,12 @@ const config = {
     { key: 'analytics', label: 'Analíticos', description: 'd', required: false, cookies: [] },
     { key: 'embedded', label: 'Conteúdo incorporado', description: 'd', required: false, cookies: [] },
   ],
-  texts: { title: 'Sua privacidade', message: 'm', policy_link: 'Política', accept_all: 'Aceitar todos', reject_all: 'Rejeitar não necessários', customize: 'Personalizar', save: 'Salvar preferências', prefs_title: 'Preferências', prefs_intro: 'i', always_active: 'Sempre ativos', browser_info: 'b', floating_label: 'Preferências de cookies' },
+  texts: { title: 'Sua privacidade', message: 'm', policy_link: 'Política', rights_link: 'Exercer seus direitos', accept_all: 'Aceitar todos', reject_all: 'Rejeitar não necessários', customize: 'Personalizar', save: 'Salvar preferências', prefs_title: 'Preferências', prefs_intro: 'i', always_active: 'Sempre ativos', browser_info: 'b', floating_label: 'Preferências de cookies' },
   policyUrl: 'https://site.test/aviso/#politica-de-cookies', rightsUrl: '', restUrl: 'https://site.test/wp-json/lets-cookies/v1/consent', position: 'bottom-right', showFloating: true,
+  browserLinks: [{ name: 'Google Chrome', url: 'https://support.google.com/chrome/answer/95647?hl=pt-BR' }, { name: 'Malicioso', url: 'javascript:alert(1)' }],
 };
 
-function page(cookie) {
+function page(cookie, opts = {}) {
   const html = `<!doctype html><html><head></head><body>
     <script type="text/plain" data-lets-category="analytics" data-lets-service="ga4">window.__gaRan = true;</script>
     <script type="text/plain" data-lets-category="marketing">window.__mkRan = true;</script>
@@ -28,9 +29,9 @@ function page(cookie) {
   const dom = new JSDOM(html, { url: 'https://site.test/contato/?x=1', runScripts: 'dangerously', virtualConsole: vc });
   const w = dom.window; holder.w = w;
   w.__posts = [];
-  w.fetch = (url, opts) => { w.__posts.push({ url, body: JSON.parse(opts.body), credentials: opts.credentials }); return Promise.resolve({}); };
+  w.fetch = (url, o) => { w.__posts.push({ url, body: JSON.parse(o.body), credentials: o.credentials }); return opts.fail ? Promise.reject(new Error('offline')) : Promise.resolve({ ok: true, status: 201 }); };
   w.crypto.randomUUID = () => '3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90';
-  if (cookie) w.document.cookie = cookie;
+  if (cookie) w.document.cookie = cookie + '; Path=/';
   w.LetsCookiesConfig = JSON.parse(JSON.stringify(config));
   w.eval(code);
   return new Promise(r => { if (w.document.readyState !== 'loading') r(w); else w.document.addEventListener('DOMContentLoaded', () => setTimeout(() => r(w), 0)); });
@@ -50,6 +51,8 @@ ok(btns.map(b => b.textContent).join('|') === 'Rejeitar não necessários|Person
 ok(!w.__gaRan && !w.__mkRan, 'nenhum script de terceiro rodou antes da escolha');
 ok(!q(w, '.lets-ck-embed iframe[src]'), 'nenhum iframe ativo antes da escolha');
 ok(banner.querySelector('a[href*="politica-de-cookies"]'), 'banner tem link para a âncora da Política');
+const rightsLink = [...banner.querySelectorAll('a')].find(a => a.textContent === 'Exercer seus direitos');
+ok(rightsLink && rightsLink.href.includes('politica-de-cookies'), 'link para exercer direitos no 1º nível (cai na Política sem canal próprio)');
 
 console.log('Personalizar');
 click(w, btns[1]);
@@ -60,6 +63,8 @@ ok(switches.length === 2, 'uma chave por categoria não necessária');
 ok(switches.every(s => !s.checked), 'nenhuma categoria pré-marcada');
 ok(prefs.textContent.includes('Sempre ativos'), 'Necessários aparecem como sempre ativos, sem chave');
 ok(prefs.querySelector('details table'), 'lista de cookies recolhida (sem excesso de informação)');
+const bl = [...prefs.querySelectorAll('.lets-ck-browser-links a')];
+ok(bl.length === 1 && bl[0].textContent === 'Google Chrome', 'links de ajuda dos navegadores no 2º nível (só https)');
 const pbtns = [...prefs.querySelectorAll('.lets-ck-actions button')];
 ok(pbtns.length === 3 && pbtns.every(b => b.className === 'lets-ck-btn'), '2º nível também tem Rejeitar/Salvar/Aceitar iguais');
 switches.find(s => s.dataset.letsCat === 'analytics').checked = true;
@@ -102,6 +107,21 @@ await new Promise(r => setTimeout(r, 400));
   const old = accepted.replace('%22v%22%3A2', '%22v%22%3A1');
   let w3 = await page(old);
   ok(q(w3, '.lets-ck-banner') && !w3.__gaRan, 'versão antiga da política: banner volta e nada roda');
+
+  console.log('Registro que falhou é reenviado');
+  let w5 = await page(null, { fail: true });
+  click(w5, q(w5, '.lets-ck-banner button[data-lets-action="reject"]'));
+  await new Promise(r => setTimeout(r, 50));
+  const pending = decodeURIComponent(w5.document.cookie.match(/lets_cookies_consent=([^;]*)/)[1]);
+  ok(JSON.parse(pending).l === 0, 'sem resposta do servidor, a escolha fica marcada como pendente');
+  let w6 = await page('lets_cookies_consent=' + encodeURIComponent(pending));
+  await new Promise(r => setTimeout(r, 50));
+  ok(w6.__posts.length === 1 && w6.__posts[0].body.action === 'reject_all', 'na página seguinte, o registro pendente é reenviado com a mesma ação');
+  const done = decodeURIComponent(w6.document.cookie.match(/lets_cookies_consent=([^;]*)/)[1]);
+  ok(JSON.parse(done).l === 1, 'depois da confirmação, deixa de ser pendente');
+  let w7 = await page('lets_cookies_consent=' + encodeURIComponent(done));
+  await new Promise(r => setTimeout(r, 50));
+  ok(w7.__posts.length === 0, 'registro confirmado não é reenviado');
 
   console.log('Aceitar todos');
   let w4 = await page();

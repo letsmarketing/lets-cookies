@@ -44,6 +44,7 @@ class Lets_Cookies_Settings {
 				'title'          => 'Sua privacidade',
 				'message'        => 'Usamos cookies necessários para o funcionamento do site. Com o seu consentimento, também usamos cookies para entender como o site é utilizado e para exibir conteúdos de terceiros, como vídeos. Você pode aceitar todos, recusar os não necessários ou escolher por categoria.',
 				'policy_link'    => 'Política de Cookies',
+				'rights_link'    => 'Exercer seus direitos',
 				'accept_all'     => 'Aceitar todos',
 				'reject_all'     => 'Rejeitar não necessários',
 				'customize'      => 'Personalizar',
