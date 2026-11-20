@@ -65,6 +65,12 @@ ok(is_wp_error(Lets_Cookies_Consent_Log::validate(array_merge($good,array('choic
 ok(is_wp_error(Lets_Cookies_Consent_Log::validate(array_merge($good,array('action'=>'reject_all')))), 'rejeitar com categoria aceita recusado (incoerente)');
 ok(is_wp_error(Lets_Cookies_Consent_Log::validate(array_merge($good,array('choices'=>array('a'=>false,'b'=>false,'c'=>false,'d'=>false))))), 'categorias a mais recusadas');
 
+$inj = Lets_Cookies_Consent_Log::validate(array_merge($good,array('page'=>'=HYPERLINK("http://mal.example","x")')));
+ok(is_array($inj) && $inj['page']==='/', 'texto de fórmula no campo página vira "/"');
+$inj2 = Lets_Cookies_Consent_Log::validate(array_merge($good,array('page'=>'/a b<script>')));
+ok(is_array($inj2) && $inj2['page']==='/', 'caminho com caracteres estranhos vira "/"');
+ok(Lets_Cookies_Consent_Log::csv_safe('=1+1')==="'=1+1" && Lets_Cookies_Consent_Log::csv_safe('-2')==="'-2" && Lets_Cookies_Consent_Log::csv_safe('/contato/')==='/contato/', 'exportação CSV neutraliza células que viram fórmula');
+
 echo "Hash do IP\n";
 $h1 = Lets_Cookies_Consent_Log::ip_hash('200.150.10.25'); $h2 = Lets_Cookies_Consent_Log::ip_hash('200.150.10.99');
 ok($h1===$h2 && strlen($h1)===64, 'IPv4 truncado em /24 antes do hash');

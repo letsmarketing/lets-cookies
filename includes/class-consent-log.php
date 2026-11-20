@@ -159,9 +159,11 @@ class Lets_Cookies_Consent_Log {
 			return new WP_Error( 'lets_cookies_invalid', 'Escolhas incoerentes.', array( 'status' => 400 ) );
 		}
 
+		// Só um caminho do próprio site: começa com "/" e usa caracteres de URL.
+		// Bloqueia textos que virariam fórmula no Excel (CSV injection).
 		$page = isset( $body['page'] ) ? (string) $body['page'] : '';
-		$page = substr( wp_parse_url( $page, PHP_URL_PATH ) ? wp_parse_url( $page, PHP_URL_PATH ) : '/', 0, 255 );
-		$page = sanitize_text_field( $page );
+		$path = (string) wp_parse_url( $page, PHP_URL_PATH );
+		$page = ( '' !== $path && '/' === $path[0] && preg_match( '#^/[A-Za-z0-9/_\-.~%]*$#', $path ) ) ? substr( $path, 0, 255 ) : '/';
 
 		return array(
 			'consent_id' => $consent_id,
@@ -219,7 +221,7 @@ class Lets_Cookies_Consent_Log {
 		$table      = self::table();
 		$created_at = gmdate( 'Y-m-d H:i:s' );
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$prev = (string) $wpdb->get_var( "SELECT row_hash FROM {$table} ORDER BY id DESC LIMIT 1" );
+		$prev = (string) $wpdb->get_var( $wpdb->prepare( 'SELECT row_hash FROM %i ORDER BY id DESC LIMIT 1', $table ) );
 
 		$row = array(
 			'consent_id'     => $data['consent_id'],
@@ -246,7 +248,7 @@ class Lets_Cookies_Consent_Log {
 		$cutoff   = gmdate( 'Y-m-d H:i:s', time() - ( DAY_IN_SECONDS * (int) $settings['retention_days'] ) );
 		$table    = self::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		$wpdb->query( $wpdb->prepare( "DELETE FROM {$table} WHERE created_at < %s", $cutoff ) );
+		$wpdb->query( $wpdb->prepare( 'DELETE FROM %i WHERE created_at < %s', $table, $cutoff ) );
 	}
 
 	/**
@@ -259,7 +261,7 @@ class Lets_Cookies_Consent_Log {
 		global $wpdb;
 		$table = self::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		return $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} ORDER BY id DESC LIMIT %d", $limit ), ARRAY_A );
+		return $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id DESC LIMIT %d', $table, $limit ), ARRAY_A );
 	}
 
 	/** Total de registros. */
@@ -267,7 +269,19 @@ class Lets_Cookies_Consent_Log {
 		global $wpdb;
 		$table = self::table();
 		// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-		return (int) $wpdb->get_var( "SELECT COUNT(*) FROM {$table}" );
+		return (int) $wpdb->get_var( $wpdb->prepare( 'SELECT COUNT(*) FROM %i', $table ) );
+	}
+
+	/**
+	 * Segunda barreira contra CSV injection: célula que começa com = + - @
+	 * ou tabulação ganha um apóstrofo, para o Excel tratar como texto.
+	 *
+	 * @param mixed $value Valor da célula.
+	 * @return string
+	 */
+	public static function csv_safe( $value ) {
+		$value = (string) $value;
+		return ( '' !== $value && false !== strpos( "=+-@\t\r", $value[0] ) ) ? "'" . $value : $value;
 	}
 
 	/** Exporta todos os registros em CSV (só administradores). */
@@ -290,9 +304,9 @@ class Lets_Cookies_Consent_Log {
 		$offset = 0;
 		do {
 			// phpcs:ignore WordPress.DB.DirectDatabaseQuery
-			$rows = $wpdb->get_results( $wpdb->prepare( "SELECT * FROM {$table} ORDER BY id ASC LIMIT 1000 OFFSET %d", $offset ), ARRAY_A );
+			$rows = $wpdb->get_results( $wpdb->prepare( 'SELECT * FROM %i ORDER BY id ASC LIMIT 1000 OFFSET %d', $table, $offset ), ARRAY_A );
 			foreach ( $rows as $row ) {
-				fputcsv( $out, array_values( $row ), ';' );
+				fputcsv( $out, array_map( array( __CLASS__, 'csv_safe' ), array_values( $row ) ), ';' );
 			}
 			$offset += 1000;
 		} while ( count( $rows ) === 1000 );
