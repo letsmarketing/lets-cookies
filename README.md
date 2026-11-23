@@ -4,6 +4,19 @@ Plugin WordPress de banner de cookies e registro de consentimento (LGPD) da Lets
 
 **Status:** protótipo `0.1.4`, para testes em homologação. Não usar em produção antes do piloto e da revisão jurídica.
 
+**Repositório:** [github.com/letsmarketing/lets-cookies](https://github.com/letsmarketing/lets-cookies) (transferido de `tsimabuco/lets-cookies`; o GitHub redireciona o endereço antigo, mas use sempre o novo).
+
+## Desenvolvimento
+
+```bash
+git clone https://github.com/letsmarketing/lets-cookies.git
+cd lets-cookies
+npm install
+npm test
+```
+
+Os testes rodam em PHP (`tests/php-tests.php`) e em Node com jsdom (`tests/js-tests.js`).
+
 ## Princípios
 
 1. **Zero requisições externas antes do consentimento.** Banner, estilos e scripts do plugin vêm do próprio site.
