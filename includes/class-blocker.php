@@ -20,6 +20,15 @@ class Lets_Cookies_Blocker {
 		add_filter( 'the_content', array( __CLASS__, 'filter_content' ), 99 );
 		add_filter( 'widget_text_content', array( __CLASS__, 'filter_content' ), 99 );
 		add_filter( 'widget_custom_html_content', array( __CLASS__, 'filter_content' ), 99 );
+
+		// Campos do ACF usados nos temas próprios (vídeo ou mapa colado em campo, fora do conteúdo).
+		$filters = apply_filters(
+			'lets_cookies_content_filters',
+			array( 'acf/format_value/type=oembed', 'acf/format_value/type=wysiwyg', 'acf/format_value/type=textarea' )
+		);
+		foreach ( (array) $filters as $hook ) {
+			add_filter( $hook, array( __CLASS__, 'filter_content' ), 99 );
+		}
 	}
 
 	/**

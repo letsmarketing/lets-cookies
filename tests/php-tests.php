@@ -5,7 +5,7 @@ $GLOBALS['opts'] = array(); $GLOBALS['transients'] = array();
 function get_option($k,$d=false){return $GLOBALS['opts'][$k] ?? $d;}
 function update_option($k,$v){$GLOBALS['opts'][$k]=$v;return true;}
 function apply_filters($h,$v){return $v;}
-function add_filter(){} function add_action(){} function add_shortcode(){}
+$GLOBALS['lc_hooks']=array(); function add_filter($h=''){ $GLOBALS['lc_hooks'][]=$h; } function add_action(){} function add_shortcode(){}
 function is_admin(){return false;} function is_feed(){return false;}
 function wp_parse_url($u,$c=-1){return parse_url($u,$c);}
 function esc_attr($s){return htmlspecialchars((string)$s,ENT_QUOTES);} function esc_html($s){return htmlspecialchars((string)$s,ENT_QUOTES);}
@@ -94,6 +94,13 @@ ok($san['integrations']['ga4']==='G-ABC1234', 'ID do GA normalizado');
 ok($san['integrations']['clarity']==='', 'ID malicioso do Clarity descartado');
 ok($san['color_primary']==='#55693c', 'cor inválida volta ao padrão');
 ok($san['policy_version']===1, 'versão mínima 1');
+
+echo "Campos do tema (ACF)\n";
+$GLOBALS['lc_hooks']=array(); Lets_Cookies_Blocker::init();
+ok(in_array('acf/format_value/type=oembed',$GLOBALS['lc_hooks'],true), 'campo oEmbed do ACF passa pelo bloqueio');
+ok(in_array('acf/format_value/type=wysiwyg',$GLOBALS['lc_hooks'],true), 'campo de texto rico do ACF passa pelo bloqueio');
+$acf=Lets_Cookies_Blocker::filter_content('<iframe title="v" width="640" height="360" src="https://www.youtube.com/embed/MotBO_RzZmg?feature=oembed&controls=1" frameborder="0"></iframe>');
+ok(strpos($acf,'lets-ck-embed')!==false && strpos($acf,' src="https://www.youtube')===false, 'vídeo do campo do tema fica bloqueado, sem src ativo');
 
 echo $fail ? "\n$fail FALHA(S)\n" : "\nTodos os testes passaram\n";
 exit($fail?1:0);

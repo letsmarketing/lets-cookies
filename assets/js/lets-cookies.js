@@ -136,7 +136,7 @@
 		if (!granted('embedded')) {
 			return;
 		}
-		Array.prototype.forEach.call(document.querySelectorAll('.lets-ck-embed.is-pending'), loadEmbed);
+		Array.prototype.forEach.call(document.querySelectorAll('.lets-ck-embed:not(.is-loaded)'), loadEmbed); // Com consentimento, todos os conteúdos carregam.
 	}
 
 	/* Apaga cookies próprios de categorias revogadas (os de terceiros não são acessíveis). */
@@ -493,6 +493,7 @@
 		if (state) {
 			updateConsentMode();
 			activateScripts();
+			loadPendingEmbeds();
 			updateClarity();
 			showFloating();
 		} else {
