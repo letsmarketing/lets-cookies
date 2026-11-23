@@ -93,6 +93,13 @@ class Lets_Cookies_Catalog {
 					array( 'sp_landing', 'Spotify', 'Registra a página de entrada no player.', '1 dia', true ),
 				),
 			),
+			'soundcloud'   => array(
+				'name'     => 'SoundCloud',
+				'category' => 'embedded',
+				'cookies'  => array(
+					array( 'sc_anonymous_id', 'SoundCloud', 'Identificador anônimo do player de áudio.', '1 ano', true ),
+				),
+			),
 			'googlemaps'   => array(
 				'name'     => 'Google Maps',
 				'category' => 'embedded',
@@ -129,7 +136,7 @@ class Lets_Cookies_Catalog {
 		}
 
 		if ( in_array( 'embedded', $enabled, true ) ) {
-			foreach ( array( 'youtube', 'vimeo', 'spotify', 'googlemaps' ) as $key ) {
+			foreach ( array( 'youtube', 'vimeo', 'spotify', 'soundcloud', 'googlemaps' ) as $key ) {
 				$active[ $key ] = $all[ $key ];
 			}
 		}

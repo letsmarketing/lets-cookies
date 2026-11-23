@@ -102,5 +102,8 @@ ok(in_array('acf/format_value/type=wysiwyg',$GLOBALS['lc_hooks'],true), 'campo d
 $acf=Lets_Cookies_Blocker::filter_content('<iframe title="v" width="640" height="360" src="https://www.youtube.com/embed/MotBO_RzZmg?feature=oembed&controls=1" frameborder="0"></iframe>');
 ok(strpos($acf,'lets-ck-embed')!==false && strpos($acf,' src="https://www.youtube')===false, 'vídeo do campo do tema fica bloqueado, sem src ativo');
 
+$sc=Lets_Cookies_Blocker::filter_content('<iframe width="100%" height="166" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/123"></iframe>');
+ok(strpos($sc,'lets-ck-embed')!==false && strpos($sc,'SoundCloud')!==false, 'SoundCloud também fica bloqueado');
+
 echo $fail ? "\n$fail FALHA(S)\n" : "\nTodos os testes passaram\n";
 exit($fail?1:0);

@@ -45,6 +45,7 @@ class Lets_Cookies_Blocker {
 				'youtu.be'             => array( 'youtube', 'YouTube' ),
 				'vimeo.com'            => array( 'vimeo', 'Vimeo' ),
 				'spotify.com'          => array( 'spotify', 'Spotify' ),
+				'soundcloud.com'       => array( 'soundcloud', 'SoundCloud' ),
 				'google.com'           => array( 'googlemaps', 'Google Maps' ),
 				'google.com.br'        => array( 'googlemaps', 'Google Maps' ),
 			)
@@ -169,6 +170,11 @@ class Lets_Cookies_Blocker {
 		}
 		if ( 'spotify' === $service ) {
 			return str_replace( '/embed/', '/', strtok( $src, '?' ) );
+		}
+		if ( 'soundcloud' === $service ) {
+			parse_str( (string) wp_parse_url( $src, PHP_URL_QUERY ), $q );
+			$url = isset( $q['url'] ) ? (string) $q['url'] : '';
+			return 0 === strpos( $url, 'https://soundcloud.com/' ) ? $url : 'https://soundcloud.com';
 		}
 		if ( 'googlemaps' === $service ) {
 			return 'https://www.google.com/maps';
