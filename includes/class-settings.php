@@ -29,6 +29,7 @@ class Lets_Cookies_Settings {
 			'rights_url'         => '',
 			'retention_days'     => 365,
 			'show_floating'      => 1,
+			'click_to_load'      => 1,
 			'position'           => 'bottom-right',
 			'color_primary'      => '#55693c',
 			'color_text'         => '#1f1f1f',
@@ -120,6 +121,7 @@ class Lets_Cookies_Settings {
 		$out['policy_version'] = isset( $input['policy_version'] ) ? max( 1, absint( $input['policy_version'] ) ) : $current['policy_version'];
 		$out['retention_days'] = isset( $input['retention_days'] ) ? min( 3650, max( 30, absint( $input['retention_days'] ) ) ) : $current['retention_days'];
 		$out['show_floating']  = empty( $input['show_floating'] ) ? 0 : 1;
+		$out['click_to_load']  = empty( $input['click_to_load'] ) ? 0 : 1;
 		$out['position']       = ( isset( $input['position'] ) && in_array( $input['position'], array( 'bottom-right', 'bottom-left', 'bottom-bar' ), true ) ) ? $input['position'] : 'bottom-right';
 
 		foreach ( array( 'color_primary', 'color_text', 'color_background' ) as $key ) {

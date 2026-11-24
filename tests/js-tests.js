@@ -12,7 +12,7 @@ const config = {
     { key: 'embedded', label: 'Conteúdo incorporado', description: 'd', required: false, cookies: [] },
   ],
   texts: { title: 'Sua privacidade', message: 'm', policy_link: 'Política', rights_link: 'Exercer seus direitos', accept_all: 'Aceitar todos', reject_all: 'Rejeitar não necessários', customize: 'Personalizar', save: 'Salvar preferências', prefs_title: 'Preferências', prefs_intro: 'i', always_active: 'Sempre ativos', browser_info: 'b', floating_label: 'Preferências de cookies' },
-  policyUrl: 'https://site.test/aviso/#politica-de-cookies', rightsUrl: '', restUrl: 'https://site.test/wp-json/lets-cookies/v1/consent', position: 'bottom-right', showFloating: true,
+  policyUrl: 'https://site.test/aviso/#politica-de-cookies', rightsUrl: '', restUrl: 'https://site.test/wp-json/lets-cookies/v1/consent', position: 'bottom-right', showFloating: true, clickToLoad: true,
   browserLinks: [{ name: 'Google Chrome', url: 'https://support.google.com/chrome/answer/95647?hl=pt-BR' }, { name: 'Malicioso', url: 'javascript:alert(1)' }],
 };
 
@@ -21,6 +21,7 @@ function page(cookie, opts = {}) {
     <script type="text/plain" data-lets-category="analytics" data-lets-service="ga4">window.__gaRan = true;</script>
     <script type="text/plain" data-lets-category="marketing">window.__mkRan = true;</script>
     <div class="lets-ck-embed" data-lets-category="embedded"><template><iframe data-lets-src="https://www.youtube-nocookie.com/embed/x"></iframe></template><div class="lets-ck-embed__box"><button type="button" class="lets-ck-embed__btn">Carregar</button></div></div>
+    <div class="lets-ck-embed" id="embed2" data-lets-category="embedded"><template><iframe data-lets-src="https://www.youtube-nocookie.com/embed/y"></iframe></template><div class="lets-ck-embed__box"><button type="button" class="lets-ck-embed__btn">Carregar</button></div></div>
     <a href="#lets-cookies" id="footer-link">Preferências de cookies</a>
   </body></html>`;
   const vc = new VirtualConsole();
@@ -32,7 +33,7 @@ function page(cookie, opts = {}) {
   w.fetch = (url, o) => { w.__posts.push({ url, body: JSON.parse(o.body), credentials: o.credentials }); return opts.fail ? Promise.reject(new Error('offline')) : Promise.resolve({ ok: true, status: 201 }); };
   w.crypto.randomUUID = () => '3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90';
   if (cookie) w.document.cookie = cookie + '; Path=/';
-  w.LetsCookiesConfig = JSON.parse(JSON.stringify(config));
+  w.LetsCookiesConfig = Object.assign(JSON.parse(JSON.stringify(config)), opts.config || {});
   w.eval(code);
   return new Promise(r => { if (w.document.readyState !== 'loading') r(w); else w.document.addEventListener('DOMContentLoaded', () => setTimeout(() => r(w), 0)); });
 }
@@ -87,6 +88,9 @@ ok(w.document.activeElement && w.document.activeElement.dataset.letsCat === 'emb
 w.document.activeElement.checked = true;
 click(w, [...q(w, '.lets-ck-prefs').querySelectorAll('.lets-ck-actions button')][1]);
 ok(q(w, '.lets-ck-embed iframe[src="https://www.youtube-nocookie.com/embed/x"]'), 'após autorizar, o vídeo pendente carrega');
+ok(!q(w, '#embed2 iframe'), 'só no clique: o outro vídeo da página continua esperando o clique');
+click(w, q(w, '#embed2 .lets-ck-embed__btn'));
+ok(q(w, '#embed2 iframe[src="https://www.youtube-nocookie.com/embed/y"]'), 'com consentimento, o clique carrega o vídeo direto');
 
 console.log('Revogação');
 click(w, q(w, '#footer-link'));
@@ -107,7 +111,11 @@ await new Promise(r => setTimeout(r, 400));
   ok(!q(w2, '.lets-ck-embed iframe[src]'), 'vídeo segue bloqueado quando só analíticos foram aceitos');
   const embOk = 'lets_cookies_consent=' + encodeURIComponent(JSON.stringify({ v: 2, id: '3f2a9c1e-5b7d-4e8a-9c21-7d4e5f6a8b90', c: { analytics: false, embedded: true, marketing: false }, t: 1, l: 1 }));
   let wE = await page(embOk);
-  ok(q(wE, '.lets-ck-embed iframe[src="https://www.youtube-nocookie.com/embed/x"]'), 'com conteúdo incorporado aceito, o vídeo carrega direto na visita seguinte');
+  ok(!q(wE, '.lets-ck-embed iframe'), 'só no clique: na visita seguinte, o vídeo espera o clique mesmo com consentimento');
+  click(wE, q(wE, '.lets-ck-embed__btn'));
+  ok(q(wE, '.lets-ck-embed iframe[src="https://www.youtube-nocookie.com/embed/x"]') && (!q(wE, '.lets-ck-overlay') || q(wE, '.lets-ck-overlay').hidden), 'o clique carrega o vídeo sem abrir as preferências');
+  let wA = await page(embOk, { config: { clickToLoad: false } });
+  ok(wA.document.querySelectorAll('.lets-ck-embed iframe[src]').length === 2, 'com a opção desligada, os vídeos carregam direto para quem já autorizou');
   const old = accepted.replace('%22v%22%3A2', '%22v%22%3A1');
   let w3 = await page(old);
   ok(q(w3, '.lets-ck-banner') && !w3.__gaRan, 'versão antiga da política: banner volta e nada roda');

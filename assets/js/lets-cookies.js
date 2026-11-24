@@ -136,7 +136,9 @@
 		if (!granted('embedded')) {
 			return;
 		}
-		Array.prototype.forEach.call(document.querySelectorAll('.lets-ck-embed:not(.is-loaded)'), loadEmbed); // Com consentimento, todos os conteúdos carregam.
+		// Com "carregar só no clique", só abre o conteúdo que o visitante clicou antes de autorizar.
+		var sel = cfg.clickToLoad ? '.lets-ck-embed.is-pending:not(.is-loaded)' : '.lets-ck-embed:not(.is-loaded)';
+		Array.prototype.forEach.call(document.querySelectorAll(sel), loadEmbed);
 	}
 
 	/* Apaga cookies próprios de categorias revogadas (os de terceiros não são acessíveis). */

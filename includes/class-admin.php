@@ -139,6 +139,11 @@ class Lets_Cookies_Admin {
 						<td><label><input type="checkbox" name="<?php echo esc_attr( self::field_name( 'show_floating' ) ); ?>" value="1" <?php checked( $s['show_floating'], 1 ); ?>> Mostrar botão para reabrir as preferências</label>
 						<p class="description">Se desligar, coloque o shortcode [lets_cookies_preferences] ou um link para #lets-cookies no rodapé.</p></td>
 					</tr>
+					<tr>
+						<th scope="row">Conteúdo incorporado</th>
+						<td><label><input type="checkbox" name="<?php echo esc_attr( self::field_name( 'click_to_load' ) ); ?>" value="1" <?php checked( $s['click_to_load'], 1 ); ?>> Carregar vídeos, mapas e podcasts só quando o visitante clicar</label>
+						<p class="description">Mesmo depois do consentimento, cada conteúdo espera o clique do visitante. Se desligar, os conteúdos carregam sozinhos para quem já autorizou a categoria.</p></td>
+					</tr>
 					<?php foreach ( array( 'color_primary' => 'Cor principal', 'color_text' => 'Cor do texto', 'color_background' => 'Cor de fundo' ) as $key => $label ) : ?>
 					<tr>
 						<th scope="row"><label for="lc-<?php echo esc_attr( $key ); ?>"><?php echo esc_html( $label ); ?></label></th>
@@ -225,6 +230,9 @@ class Lets_Cookies_Admin {
 			}
 			if ( $s['show_floating'] ) {
 				$out[] = array( $name . '[show_floating]', '1' );
+			}
+			if ( $s['click_to_load'] ) {
+				$out[] = array( $name . '[click_to_load]', '1' );
 			}
 		}
 		if ( 'textos' !== $tab ) {

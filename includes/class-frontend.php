@@ -129,6 +129,7 @@ gtag('consent', 'default', {ad_storage:'denied', ad_user_data:'denied', ad_perso
 			'restUrl'      => esc_url_raw( rest_url( 'lets-cookies/v1/consent' ) ),
 			'position'     => $settings['position'],
 			'showFloating' => (bool) $settings['show_floating'],
+			'clickToLoad'  => (bool) apply_filters( 'lets_cookies_click_to_load', ! empty( $settings['click_to_load'] ) ),
 			'browserLinks' => self::browser_links(),
 		);
 	}
